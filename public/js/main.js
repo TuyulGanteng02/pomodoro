@@ -53,12 +53,27 @@ function addTask() {
  }
 }
 
-function setTask() {
+async function setTask() {
   if(currentTaskIndex >= tasks.length) {
     currentTaskIndex = 0; 
   }
-  let nextTask = tasks[currentTaskIndex];
-  taskNameElement.textContent = nextTask;
+  let taskName = tasks[currentTaskIndex];
+  
+  // Kirim nama task ke server
+  let response = await fetch('/store-task', {
+    method: 'POST', 
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      deskripsi: taskName
+    })
+  });
+
+  await response.json(); 
+
+  // Update UI
+  taskNameElement.textContent = taskName;
   currentTaskIndex++;
 }
 
@@ -169,8 +184,7 @@ function prevSession() {
     sessionName = 'Long Break';
   }  
   if(sessionOrder.length === 0) {
-     prevBtn.disabled = true;
-     return;
+    generateSessionOrder()
   }
   updateDisplay();
   sessionNameElement.textContent = sessionName;
@@ -190,9 +204,8 @@ function nextSession() {
     currentSession = longBreakMinutes * 60; 
     sessionName = 'Long Break';
   }
-  if(sessionOrder.length === 5) {
-    nextBtn.disabled = true;
-    return; 
+  if(sessionOrder.length === 0) {
+    generateSessionOrder() 
   } 
   updateDisplay();
   sessionNameElement.textContent = sessionName;
@@ -220,6 +233,29 @@ function updateTasks() {
     taskElement.textContent = taskName;
     tasksElement.appendChild(taskElement);
   });
+}
+
+async function sendNewTaskData(duration) {
+
+  let userId = getLoggedInUserId();
+  let taskDescription = getCurrentTask();
+  let status = 'belum selesai';
+
+  let response = await fetch('/store-task', {
+     method: 'POST',
+     headers: {
+       'Content-Type': 'application/json' 
+     },
+     body: JSON.stringify({
+       user_id: userId,
+       deskripsi: taskDescription,
+       durasi: duration,  
+       status   
+     })
+  });
+
+  return response.json();
+
 }
 
 function init() {
